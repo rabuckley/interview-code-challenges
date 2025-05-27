@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OneBeyondApi.Controllers;
 using OneBeyondApi.Model;
 
 namespace OneBeyondApi.DataAccess
@@ -33,16 +34,37 @@ namespace OneBeyondApi.DataAccess
 
                 if (search != null)
                 {
-                    if (!string.IsNullOrEmpty(search.Author)) {
+                    if (!string.IsNullOrEmpty(search.Author))
+                    {
                         list = list.Where(x => x.Book.Author.Name.Contains(search.Author));
                     }
-                    if (!string.IsNullOrEmpty(search.BookName)) {
+                    if (!string.IsNullOrEmpty(search.BookName))
+                    {
                         list = list.Where(x => x.Book.Name.Contains(search.BookName));
                     }
                 }
-                    
+
                 return list.ToList();
             }
+        }
+
+        public List<LoanDetail> GetLoanDetails()
+        {
+            using var context = new LibraryContext();
+
+            var loanedStock = context.Catalogue
+                .AsNoTracking()
+                .Include(x => x.OnLoanTo)
+                .Include(x => x.Book)
+                .Where(x => x.OnLoanTo != null)
+                .GroupBy(x => x.OnLoanTo)
+                .Select(g => new LoanDetail
+                {
+                    Borrower = g.Key!,
+                    LoanedBookTitles = g.Select(x => x.Book.Name).ToList()
+                });
+
+            return [.. loanedStock];
         }
     }
 }
