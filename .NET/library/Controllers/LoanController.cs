@@ -1,9 +1,8 @@
-using System;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using OneBeyondApi.DataAccess;
-using OneBeyondApi.Model;
+using OneBeyondApi.DataTransfer;
+using OneBeyondApi.Mapping;
 
 namespace OneBeyondApi.Controllers;
 
@@ -27,13 +26,20 @@ public sealed class LoanController : ControllerBase
 
     [HttpPost]
     [Route("Return")]
+    [ProducesResponseType(typeof(StockReturnResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult Return(Guid stockId)
     {
         var result = _catalogueRepository.ReturnStock(stockId);
 
         return result switch
         {
-            BookStockReturnSuccess s => Ok(s.Stock),
+            BookStockReturnSuccess s => Ok(new StockReturnResponse
+            {
+                StockId = s.Stock.Id,
+                Fine = FineModelToDataMapper.CreateMapped(s.Fine)
+            }),
             BookStockNotFound s => NotFound(s.StockId),
             BookStockNotOnLoan s => BadRequest($"Stock with ID '{s.StockId}' is not currently on loan."),
             _ => throw new UnreachableException($"Unexpected result type `{result.GetType()}`")

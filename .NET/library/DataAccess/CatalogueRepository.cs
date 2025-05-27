@@ -85,11 +85,30 @@ namespace OneBeyondApi.DataAccess
                 return BookStockReturnResult.NotOnLoan(stockId);
             }
 
+            Fine? fine = null;
+            var now = DateTimeOffset.UtcNow;
+
+            if (stock.LoanEndDate < now)
+            {
+                // The stock was returned late.
+                var borrower = stock.OnLoanTo;
+
+                fine = new Fine
+                {
+                    Borrower = borrower,
+                    Amount = 5.00m, // Fixed fee of £5.00.
+                    DateIssued = now
+                };
+
+                borrower.Fines.Add(fine);
+            }
+
             stock.OnLoanTo = null;
             stock.LoanEndDate = null;
 
             context.SaveChanges();
-            return BookStockReturnResult.Returned(stock);
+
+            return BookStockReturnResult.Returned(stock, fine);
         }
     }
 }

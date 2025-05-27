@@ -6,7 +6,7 @@ public abstract class BookStockReturnResult
 
     public static BookStockReturnResult NotOnLoan(Guid stockId) => new BookStockNotOnLoan(stockId);
 
-    public static BookStockReturnResult Returned(BookStock stock) => new BookStockReturnSuccess(stock);
+    public static BookStockReturnResult Returned(BookStock stock, Fine? fine) => new BookStockReturnSuccess { Stock = stock, Fine = fine };
 }
 
 public sealed class BookStockNotFound : BookStockReturnResult
@@ -31,10 +31,7 @@ public sealed class BookStockNotOnLoan : BookStockReturnResult
 
 public sealed class BookStockReturnSuccess : BookStockReturnResult
 {
-    public BookStock Stock { get; }
+    public required BookStock Stock { get; init; }
 
-    public BookStockReturnSuccess(BookStock stock)
-    {
-        Stock = stock;
-    }
+    public required Fine? Fine { get; init; }
 }
