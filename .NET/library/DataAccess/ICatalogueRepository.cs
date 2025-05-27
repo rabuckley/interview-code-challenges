@@ -9,5 +9,7 @@ namespace OneBeyondApi.DataAccess
         public List<BookStock> SearchCatalogue(CatalogueSearch search);
 
         public List<LoanDetail> GetLoanDetails();
+
+        public BookStockReturnResult ReturnStock(Guid stockId);
     }
 }

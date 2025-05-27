@@ -66,5 +66,31 @@ namespace OneBeyondApi.DataAccess
 
             return [.. loanedStock];
         }
+
+        public BookStockReturnResult ReturnStock(Guid stockId)
+        {
+            using var context = new LibraryContext();
+
+            var stock = context.Catalogue
+                .Include(x => x.OnLoanTo)
+                .FirstOrDefault(x => x.Id == stockId);
+
+            if (stock is null)
+            {
+                return BookStockReturnResult.NotFound(stockId);
+            }
+
+            if (stock.OnLoanTo is null)
+            {
+                return BookStockReturnResult.NotOnLoan(stockId);
+            }
+
+            stock.OnLoanTo = null;
+            stock.LoanEndDate = null;
+
+            context.SaveChanges();
+            return BookStockReturnResult.Returned(stock);
+        }
     }
 }
+
